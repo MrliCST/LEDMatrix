@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "author": "CLMWW",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 38.4, "left": -369.56, "attrs": {} },
+    {
+      "type": "wokwi-neopixel-matrix",
+      "id": "matrix6",
+      "top": -239.04,
+      "left": -743.36,
+      "attrs": { "rows": "8", "cols": "32", "colorOrder": "GRB" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 35,
+      "left": -124.8,
+      "attrs": { "color": "red", "xray": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn2",
+      "top": 102.2,
+      "left": -124.8,
+      "attrs": { "color": "green", "xray": "1" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn3",
+      "top": 169.4,
+      "left": -124.8,
+      "attrs": { "color": "blue", "xray": "1" }
+    },
+    { "type": "wokwi-microphone", "id": "mic1", "top": 251.82, "left": -168.21, "attrs": {} },
+    {
+      "type": "wokwi-buzzer",
+      "id": "bz1",
+      "top": 21.6,
+      "left": -574.2,
+      "attrs": { "volume": "1.0", "mode": "accurate" }
+    }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "matrix6:VCC", "esp:5V", "red", [ "v57.6", "h-48.01", "v240" ] ],
+    [ "matrix6:GND", "esp:GND.1", "black", [ "v48", "h-48", "v201.6" ] ],
+    [ "matrix6:DIN", "esp:23", "green", [ "v57.6", "h86.39", "v76.8" ] ],
+    [ "btn1:2.l", "esp:21", "yellow", [ "h-57.6", "v38.6" ] ],
+    [ "btn2:2.l", "esp:19", "yellow", [ "h-57.6", "v19.4" ] ],
+    [ "btn1:1.r", "btn2:1.l", "black", [ "h9.8", "v38.4", "h-96", "v28.8" ] ],
+    [ "btn2:1.r", "btn3:1.l", "black", [ "v0", "h9.8", "v38.4", "h-96", "v28.8" ] ],
+    [ "esp:5", "btn3:2.l", "yellow", [ "h86.4", "v48" ] ],
+    [ "esp:16", "mic1:1", "cyan", [ "h76.8", "v144", "h38.4" ] ],
+    [ "mic1:2", "btn3:1.r", "black", [ "v19.2", "h105.59", "v-134.4" ] ],
+    [ "bz1:2", "esp:35", "purple", [ "v0" ] ],
+    [ "esp:GND.3", "btn1:1.l", "black", [ "h67.2", "v-76.8" ] ],
+    [ "esp:GND.2", "bz1:1", "black", [ "v-48", "h-163.2", "v115.2", "h-67.2" ] ]
+  ],
+  "dependencies": {}
+}
