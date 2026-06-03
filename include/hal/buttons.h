@@ -3,6 +3,7 @@
 
 #include <OneButton.h>
 #include "core/config.h"
+#include "core/state_machine.h"
 
 class Buttons {
 public:

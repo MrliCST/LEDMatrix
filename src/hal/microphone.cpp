@@ -1,7 +1,7 @@
 #include "hal/microphone.h"
 #include <arduinoFFT.h>
 
-static arduinoFFT FFT;
+static ArduinoFFT<double> FFT;
 
 Microphone& Microphone::instance() {
     static Microphone m;
@@ -26,10 +26,10 @@ void Microphone::sample() {
     }
 
     // 3. FFT
-    FFT.DCRemoval();
-    FFT.Windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-    FFT.Compute(FFT_FORWARD);
-    FFT.ComplexToMagnitude();
+    FFT.dcRemoval();
+    FFT.windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+    FFT.compute(FFT_FORWARD);
+    FFT.complexToMagnitude();
 
     // 4. 按频段分桶 (15个桶，原始代码的分桶规则)
     for (int i = 2; i < SAMPLES/2; i++) {

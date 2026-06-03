@@ -26,11 +26,11 @@ public:
     uint16_t color(uint8_t r, uint8_t g, uint8_t b);  // 直接调 matrix.Color
 
     // 外部可直接拿引用做复杂绘制（谨慎）
-    Adafruit_NeoMatrix& raw() { return _matrix; }
+    Adafruit_NeoMatrix& raw() { return *_matrix; }
 
 private:
     LedMatrix() = default;
-    Adafruit_NeoMatrix _matrix;
+    Adafruit_NeoMatrix* _matrix = nullptr;
 };
 
 #endif

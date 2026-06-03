@@ -9,11 +9,32 @@
 #include "net/ntp.h"
 #include "net/web_server.h"
 
-// 向前声明，这样函数可以写在后面
-static void startConfigMode();  // 配置WIFI模式
-static void startNormalMode();  // 正常启动模式
+// 联网对时函数
+static void startCalibrateTime() {
+    bool ok = WifiManager::instance().connect(30);
+    if (!ok) {
+        StateMachine::instance().gotoPage(Page::RHYTHM);  // WiFi 失败 → 节奏灯模式
+        return;
+    }
 
-// 加载
+    ok = Ntp::instance().sync(30);
+    if (!ok) {
+        StateMachine::instance().gotoPage(Page::RHYTHM);  // 对时失败 → 节奏灯模式
+        return;
+    }
+
+    WifiManager::instance().disconnect();
+}
+
+// 在后台线程中执行对时
+static void startCalibrateTimeAsync() {
+    xTaskCreate(
+        [](void*) { startCalibrateTime(); vTaskDelete(nullptr); },
+        "ntpSync", 4096, nullptr, 1, nullptr
+    );
+}
+
+// 加载并启动
 void setup() {
     Serial.begin(115200);
 
@@ -25,48 +46,34 @@ void setup() {
     Buttons::instance().begin();      // 初始化按钮
     StateMachine::instance().init();  // 初始化页面状态机
 
-    // 若wifi未配置，则进入配置，否则跳过
+    // 未配置WIFI密码信息，进入配置模式, 否则跳过
     if (Store::instance().wifi().apConfig) {
-        startConfigMode();
+        StateMachine::instance().gotoPage(Page::SETTING);  // 进入网络配置页面
+        WifiManager::instance().startAP();     // 启动WIFI热点
+        WebServerWrapper::instance().start();  // 启动Web服务器
         return;
     }
 
-    // 开始正常启动
-    startNormalMode();
+    // 校准时间
+    startCalibrateTime();
+
+    // 设置定时对时器，并设置页面为 TIME
+    Ntp::instance().startTicker();
+    StateMachine::instance().gotoPage(Page::TIME);
 }
 
 // 主循环
 void loop() {
-    Buttons::instance().tick();
+    Buttons::instance().tick();  // 监听按钮事件
 
+    // 校时信号亮起
     if (StateMachine::instance().isCheckingTime()) {
-        // 定时对时：连 WiFi → 对时 → 断 WiFi（同原 checkTimeTicker）
-        // ...
-        StateMachine::instance().setCheckingTime(false);
+        startCalibrateTimeAsync();   // 后台线程对时
+        StateMachine::instance().setCheckingTime(false); 
     }
 
-    StateMachine::instance().update();
+    StateMachine::instance().update(); 
     delay(10);
 }
 
-// 配置WIFI模式
-static void startConfigMode() {
-    StateMachine::instance().gotoPage(Page::SETTING);
-    WifiManager::instance().startAP();
-    WebServerWrapper::instance().start();
-}
-
-// 正常启动模式
-static void startNormalMode() {
-    bool ok = WifiManager::instance().connect(30);
-    if (!ok) return;   // WIFI连接失败， 进入节奏灯模式
-
-    ok = Ntp::instance().sync(30);
-    if (!ok) return;
-
-    Ntp::instance().startTicker();
-    StateMachine::instance().gotoPage(Page::TIME);
-
-    WifiManager::instance().disconnect();
-}
 

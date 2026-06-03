@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+/**
+ *  NTP: 负责请求授时，并启动定期对时
+*/ 
 class Ntp {
 public:
     static Ntp& instance();
@@ -10,9 +13,11 @@ public:
     bool sync(int timeoutSec);       // 返回是否对时成功
     void startTicker();              // 启动定时对时
     void stopTicker();
-    bool isOk() const { return _ok; }
+    bool isOk() const { 
+        return _ok; 
+    }
 
-    /// 计算距离闹钟的剩余秒数（如果闹钟开启）
+    /// 计算距离闹钟的剩余秒数
     static int32_t secondsUntilAlarm(int hour, int minute);
 
 private:
