@@ -67,7 +67,7 @@ static void startWokwiMode() {
     WebServerWrapper::instance().start();
 
     // 进入设置页面
-    StateMachine::instance().gotoPage(Page::SETTING);
+    StateMachine::instance().gotoPage(Page::TIME);
 }
 
 // 加载并启动

@@ -5,8 +5,6 @@
 #include "pages/anim_page.h"
 #include "pages/clock_page.h"
 #include "pages/bright_page.h"
-#include "net/ntp.h"
-#include "hal/buzzer.h"
 
 StateMachine& StateMachine::instance() {
     static StateMachine sm;
@@ -34,12 +32,6 @@ void StateMachine::gotoPage(Page p) {
 }
 
 void StateMachine::onButton(int btnIndex, ButtonEvent ev) {
-    if (Ntp::instance().isBelling()) {
-        Buzzer::instance().stop();
-        Ntp::instance().setBelling(false);
-        return;
-    }
-
     auto* pg = _pages[(int)_current];
     if (ev == ButtonEvent::SHORT_PRESS) {
         switch (btnIndex) {

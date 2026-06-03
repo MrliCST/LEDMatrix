@@ -2,14 +2,11 @@
 #include "core/config.h"
 #include "core/store.h"
 #include "core/state_machine.h"
-#include "hal/buzzer.h"
 #include <WiFi.h>
 #include <time.h>
 #include <Ticker.h>
 
-static Ticker _ntpTicker;         // 定时授时器
-static Ticker _clockTicker;       // 定时闹钟
-static bool   _isBelling = false; // 是否正在响铃
+static Ticker _ntpTicker;            // 定时授时器
 
 // Network Time Protocol
 // 创建网络时间协议对象
@@ -68,27 +65,4 @@ int32_t Ntp::secondsUntilAlarm(int hour, int minute) {
     if (diff < 0)
         diff += 86400; // 已经过了，明天
     return diff;
-}
-
-void Ntp::startClockTicker(int32_t seconds)
-{
-    if (seconds <= 0)
-        seconds = 60;
-    _clockTicker.once(seconds, _onAlarm);
-    // if sceconds == 0, it will be called immediately
-}
-
-void Ntp::stopClockTicker()
-{
-    _clockTicker.detach();
-}
-
-bool Ntp::isBelling() const { return _isBelling; }
-void Ntp::setBelling(bool v) { _isBelling = v; }
-bool Ntp::isAlarmPending() const { return _alarmPending; }
-void Ntp::clearAlarmPending() { _alarmPending = false; }
-
-void Ntp::_onAlarm()
-{
-    _alarmPending = true; // loop() 里处理
 }

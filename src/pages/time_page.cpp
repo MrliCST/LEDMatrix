@@ -22,8 +22,9 @@ static const uint8_t DIGIT[10][3] PROGMEM = {
 
 static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
 static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
-void TimePage::enter(Page from)
-{
+
+void TimePage::enter(Page from) {
+    Serial.println("TimePage::enter");
     _prevDisplay = -1; // 确保首次 update() 必定触发 _drawTime
     LedMatrix::instance().clear();
     int m = Store::instance().mode().timeMode;

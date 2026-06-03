@@ -32,9 +32,32 @@ void ClockPage::enter(Page from) {
     _drawClock();
 }
 
+void ClockPage::exit() {
+    if (_clockTicker) {
+        _clockTicker->detach();
+        delete _clockTicker;
+        _clockTicker = nullptr;
+    }
+    _cancelBelling();
+}
+
 void ClockPage::update() {}
 
+void ClockPage::_cancelBelling() {
+    if (_belling) {
+        Buzzer::instance().stop();
+        _belling = false;
+    }
+}
+
+void ClockPage::_onAlarm(ClockPage* self) {
+    self->_belling = true;
+    Buzzer::instance().playSong(Store::instance().clock().bellIndex, true);
+}
+
+// 第一个按钮短按
 void ClockPage::onBtn1Short() {
+    if (_belling) { _cancelBelling(); return; }
     if (!Store::instance().clock().enabled) return;
 
     switch (_selection) {
@@ -54,6 +77,7 @@ void ClockPage::onBtn1Short() {
 }
 
 void ClockPage::onBtn2Short() {
+    if (_belling) { _cancelBelling(); return; }
     if (!Store::instance().clock().enabled) return;
 
     switch (_selection) {
@@ -73,10 +97,12 @@ void ClockPage::onBtn2Short() {
 }
 
 void ClockPage::onBtn3Short() {
+    if (_belling) { _cancelBelling(); return; }
     StateMachine::instance().gotoPage(Page::BRIGHT);
 }
 
 void ClockPage::onBtn1Long() {
+    if (_belling) { _cancelBelling(); return; }
     if (!Store::instance().clock().enabled) return;
 
     if (_selection == CLOCK_SEL_BELL)
@@ -93,6 +119,7 @@ void ClockPage::onBtn1Long() {
 }
 
 void ClockPage::onBtn2Long() {
+    if (_belling) { _cancelBelling(); return; }
     if (!Store::instance().clock().enabled) return;
 
     if (_selection == CLOCK_SEL_BELL)
@@ -109,6 +136,7 @@ void ClockPage::onBtn2Long() {
 }
 
 void ClockPage::onBtn3Long() {
+    if (_belling) { _cancelBelling(); return; }
     Buzzer::instance().stop();
     _saveAndApply();
 }
@@ -156,10 +184,17 @@ void ClockPage::_saveAndApply() {
     cfg.enabled   = !cfg.enabled;
     Store::instance().saveClock(cfg);
 
-    Ntp::instance().stopClockTicker();
+    // 停止旧的倒计时
+    if (_clockTicker) {
+        _clockTicker->detach();
+        delete _clockTicker;
+        _clockTicker = nullptr;
+    }
+
     if (cfg.enabled) {
         int32_t sec = Ntp::secondsUntilAlarm(cfg.hour, cfg.minute);
-        Ntp::instance().startClockTicker(sec);
+        _clockTicker = new Ticker();
+        _clockTicker->once(sec, +[](ClockPage* self) { self->_onAlarm(self); }, this);
     }
 
     _drawClock();
