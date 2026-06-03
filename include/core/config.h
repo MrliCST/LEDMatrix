@@ -5,12 +5,12 @@
 
 // ---- 引脚（来源: diagram.json） ----
 #define LED_DATA_PIN          23   // matrix6:DIN → esp:23
-#define AUDIO_IN_PIN          16   // mic1:1 → esp:16
-#define RANDOM_SEED_PIN       34   // 悬空引脚，给 randomSeed 用
-#define BTN1_PIN              21   // btn1:2.l → esp:21
-#define BTN2_PIN              19   // btn2:2.l → esp:19
-#define BTN3_PIN               5   // esp:5 → btn3:2.l
-#define BUZZER_PIN            35   // bz1:2 → esp:35
+#define AUDIO_IN_PIN          34   // esp:34 → mic1:1
+#define RANDOM_SEED_PIN       35   // 悬空引脚，给 randomSeed 用
+#define BTN1_PIN              13   // esp:13 → btn1:2.l
+#define BTN2_PIN              14   // esp:14 → btn2:2.l
+#define BTN3_PIN              27   // esp:27 → btn3:2.l
+#define BUZZER_PIN            25   // bz1:2 → esp:25
 
 // ---- 点阵屏 ----
 #define MATRIX_SIDE            8

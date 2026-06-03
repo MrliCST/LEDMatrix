@@ -1,37 +1,34 @@
 #ifndef TIME_PAGE_H
 #define TIME_PAGE_H
 #include "pages/page_base.h"
+#include <Ticker.h>
 
-/**
- * 时间显示页面 (TIME)
- *
- * NTP 对时成功后默认进入此页面，每秒刷新一次。
- *
- * 按键行为：
- *   短按 按键1: 显示格式 +1 (时:分:秒 → 时:分 → 日期 → 循环)
- *   短按 按键2: 显示格式 -1 (反向循环)
- *   短按 按键3: 前往 RHYTHM 页面 (节奏灯)
- *   长按 按键3: 重启进入配网模式
- *   其他长按: 无
- *
- * 3 种显示格式：
- *   TIME_FORMAT_H_M_S:  时:分:秒 (如 14:30:25)
- *   TIME_FORMAT_H_M:    时:分   (如 14:30)
- *   TIME_FORMAT_DATE:   日期   (如 06/03 周一)
- *
- * 每次切换格式后保存到 NVS。
- */
 class TimePage : public PageBase {
 public:
     void enter(Page from) override;
-    void update() override;              // 每秒检查 time() → 变了就重画
-    void onBtn1Short() override;         // 切换显示格式 (时:分:秒 → 时:分 → 日期)
-    void onBtn2Short() override;         // 反向切换 (日期 → 时:分 → 时:分:秒)
-    void onBtn3Short() override;         // 前往 RHYTHM 页面
+    void exit() override;
+    void update() override;
+    void onBtn1Short() override;
+    void onBtn2Short() override;
+    void onBtn3Short() override;
 
 private:
     time_t _prevDisplay = 0;
+    uint8_t _animFrame = 0;
+    Ticker* _tickerAnim = nullptr;
+
     void _drawTime();
+    void _drawTimeHMS();
+    void _drawTimeHM();
+    void _drawTimeDate();
+    void _drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, uint16_t wc);
+    void _drawDigit3x5(uint8_t digit, int x, int y, uint16_t color);
+    void _drawColon(int x, int y, uint16_t color);
+    void _drawDash(int x, int y, uint16_t color);
+    void _startAnimTicker();
+    void _stopAnimTicker();
+
+    static void _onAnimTick(TimePage* self);
 };
 
 #endif

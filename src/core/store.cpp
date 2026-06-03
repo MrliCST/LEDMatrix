@@ -77,14 +77,13 @@ void Store::saveBrightness(int val) {
 }
 
 void Store::_calcColors() {
-    // 主色
-    _color.mainColor = 0;  // 实际由 LedMatrix::color(r,g,b) 算
-    // 星期反色：保留最大分量，其他两色取反
+    _color.mainColor = ((_color.r & 0xF8) << 8) | ((_color.g & 0xFC) << 3) | (_color.b >> 3);
+
     int maxC = max(_color.r, max(_color.g, _color.b));
     bool found = false;
     int wr = _color.r, wg = _color.g, wb = _color.b;
     if (wr == maxC && !found) { found = true; } else { wr = 255 - wr; }
     if (wg == maxC && !found) { found = true; } else { wg = 255 - wg; }
     if (wb == maxC && !found) { found = true; } else { wb = 255 - wb; }
-    _color.weekColor = 0;  // 实际由 LedMatrix::color(wr,wg,wb) 算
+    _color.weekColor = ((wr & 0xF8) << 8) | ((wg & 0xFC) << 3) | (wb >> 3);
 }

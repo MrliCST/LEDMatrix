@@ -44,6 +44,8 @@ private:
 
     void _drawClock();                    // 绘制闹钟设置界面 (选中项高亮/闪烁)
     void _saveAndApply();                 // 保存闹钟配置到 NVS + 设置倒计时
+    void _drawDigit3x5(uint8_t digit, int x, int y, uint16_t color);
+    void _drawColon(int x, int y, uint16_t color);
 };
 
 #endif
