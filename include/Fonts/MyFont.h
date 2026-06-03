@@ -5,7 +5,7 @@
 #define MYFONT_H
 
 // ---- 位图表 (每字形5列, 列高7px, 1字节/列, bit0=顶部) ----
-const uint8_t MyFontBitmaps[] PROGMEM = {
+uint8_t MyFontBitmaps[] PROGMEM = {
     // Space (0x20)
     0x00, 0x00, 0x00, 0x00, 0x00,
     // ! (0x21)
@@ -199,7 +199,7 @@ const uint8_t MyFontBitmaps[] PROGMEM = {
 };
 
 // ---- 字形描述表 (0x20 到 0x7E) ----
-const GFXglyph MyFontGlyphs[] PROGMEM = {
+GFXglyph MyFontGlyphs[] PROGMEM = {
     {   0, 3, 7, 4, 0, 7 }, // space
     {   5, 1, 7, 2, 0, 7 }, // !
     {  10, 3, 7, 4, 0, 7 }, // "
@@ -298,9 +298,9 @@ const GFXglyph MyFontGlyphs[] PROGMEM = {
 };
 
 // ---- 字体实例 ----
-const GFXfont MyFont PROGMEM = {
-    (uint8_t  *)MyFontBitmaps,
-    (GFXglyph *)MyFontGlyphs,
+GFXfont MyFont PROGMEM = {
+    MyFontBitmaps,
+    MyFontGlyphs,
     0x20,  // first (space)
     0x7E,  // last  (~)
     8      // yAdvance (行高)

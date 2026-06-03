@@ -11,7 +11,7 @@ public:
 
 private:
     WebServerWrapper() = default;
-    WebServer _server;
+    WebServer* _server = nullptr;
 
     void _onRoot();
     void _onConfigWifi();

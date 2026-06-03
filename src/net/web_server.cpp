@@ -6,15 +6,15 @@
 WebServerWrapper& WebServerWrapper::instance() { static WebServerWrapper ws; return ws; }
 
 void WebServerWrapper::start() {
-    _server = WebServer(80);
+    _server = new WebServer(80);
 
-    _server.on("/", HTTP_GET, [this]() { _onRoot(); });
-    _server.on("/configwifi", HTTP_POST, [this]() { _onConfigWifi(); });
-    _server.onNotFound([this]() { _onRoot(); });
-    _server.begin();
+    _server->on("/", HTTP_GET, [this]() { _onRoot(); });
+    _server->on("/configwifi", HTTP_POST, [this]() { _onConfigWifi(); });
+    _server->onNotFound([this]() { _onRoot(); });
+    _server->begin();
 }
 
-void WebServerWrapper::handleClient() { _server.handleClient(); }
+void WebServerWrapper::handleClient() { _server->handleClient(); }
 
 String WebServerWrapper::_scanWiFiOptions() {
     // 同原 scanWiFi()，拼接 <option> 字符串
@@ -33,14 +33,14 @@ String WebServerWrapper::_buildPage() {
 }
 
 void WebServerWrapper::_onRoot() {
-    _server.send(200, "text/html", _buildPage());
+    _server->send(200, "text/html", _buildPage());
 }
 
 void WebServerWrapper::_onConfigWifi() {
     // 解析 ssid / pass / red / green / blue
     // 调 Store::saveWifi(...)
     // 调 Store::saveColor(...)
-    // _server.send(200, "text/html", "配置成功，即将重启...");
+    // _server->send(200, "text/html", "配置成功，即将重启...");
     // ESP.restart();
 }
 
