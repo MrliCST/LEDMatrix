@@ -35,8 +35,6 @@ void WebServerWrapper::handleClient() {
     _server->handleClient();
 }
 
-
-
 // 处理根路由
 void WebServerWrapper::_onRoot() {
     _server->send(200, "text/html", _buildPage());
@@ -80,8 +78,6 @@ void WebServerWrapper::_onNotFound() {
     _onRoot();
 }
 
-
-
 // 扫描当前的WiFi网络，并返回选项列表
 String WebServerWrapper::_scanWiFiOptions() {
     String opts;
@@ -113,4 +109,3 @@ String WebServerWrapper::_buildPage() {
 
     return html;
 }
-

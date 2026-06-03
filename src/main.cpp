@@ -9,17 +9,22 @@
 #include "net/ntp.h"
 #include "net/web_server.h"
 
+// ═══════════════════════════════════════════════════════════════
+//  调试开关：true = Wokwi 仿真模式  |  false = 真实硬件模式
+// ═══════════════════════════════════════════════════════════════
+const bool DEBUG = true;
+
 // 联网对时函数
 static void startCalibrateTime() {
     bool ok = WifiManager::instance().connect(30);
     if (!ok) {
-        StateMachine::instance().gotoPage(Page::RHYTHM);  // WiFi 失败 → 节奏灯模式
+        StateMachine::instance().gotoPage(Page::RHYTHM);
         return;
     }
 
     ok = Ntp::instance().sync(30);
     if (!ok) {
-        StateMachine::instance().gotoPage(Page::RHYTHM);  // 对时失败 → 节奏灯模式
+        StateMachine::instance().gotoPage(Page::RHYTHM);
         return;
     }
 
@@ -34,46 +39,82 @@ static void startCalibrateTimeAsync() {
     );
 }
 
+// 连接仿真器的wIFI
+static void startWokwiMode() {
+    Serial.println("[Wokwi] 连接虚拟 WiFi...");
+    WiFi.begin("Wokwi-GUEST", "");  // 连接wifi
+
+    // 等待连接成功
+    int ticks = 0;
+    while (WiFi.status() != WL_CONNECTED && ticks < 60) {
+        delay(500);
+        ticks++;
+        Serial.print(".");
+    }
+    Serial.println();
+
+    // 判定是否连接成功
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[Wokwi] WiFi 连接失败！");
+        return;
+    }
+
+    // 连接成功，启动 WebServer
+    Serial.print("[Wokwi] 已连接, IP: ");
+    Serial.println(WiFi.localIP());
+
+    // 启动 WebServer
+    WebServerWrapper::instance().start();
+
+    // 进入设置页面
+    StateMachine::instance().gotoPage(Page::SETTING);
+}
+
 // 加载并启动
 void setup() {
     Serial.begin(115200);
 
-    // 配置必要信息 和 使用的芯片引脚
-    Store::instance().load();         // 从闪存Flash中读取配置
-    LedMatrix::instance().begin();    // 初始化 LED 矩阵
-    Microphone::instance().begin();   // 初始化麦克风
-    Buzzer::instance().begin();       // 初始化蜂鸣器
-    Buttons::instance().begin();      // 初始化按钮
-    StateMachine::instance().init();  // 初始化页面状态机
+    Store::instance().load();
+    LedMatrix::instance().begin();
+    Microphone::instance().begin();
+    Buzzer::instance().begin();
+    Buttons::instance().begin();
+    StateMachine::instance().init();
 
-    // 未配置WIFI密码信息，进入配置模式, 否则跳过
-    if (Store::instance().wifi().apConfig) {
-        StateMachine::instance().gotoPage(Page::SETTING);  // 进入网络配置页面
-        WifiManager::instance().startAP();     // 启动WIFI热点
-        WebServerWrapper::instance().start();  // 启动Web服务器
+    if (DEBUG) {
+        startWokwiMode();
         return;
     }
 
-    // 校准时间
-    startCalibrateTime();
+    // 未配置WiFi，进入配网模式
+    if (Store::instance().wifi().apConfig) {
+        StateMachine::instance().gotoPage(Page::SETTING);
+        WifiManager::instance().startAP();
+        WebServerWrapper::instance().start();
+        return;
+    }
 
-    // 设置定时对时器，并设置页面为 TIME
+    // 正常启动
+    startCalibrateTime();
     Ntp::instance().startTicker();
     StateMachine::instance().gotoPage(Page::TIME);
 }
 
 // 主循环
 void loop() {
-    Buttons::instance().tick();  // 监听按钮事件
+    Buttons::instance().tick();
 
-    // 校时信号亮起
-    if (StateMachine::instance().isCheckingTime()) {
-        startCalibrateTimeAsync();   // 后台线程对时
-        StateMachine::instance().setCheckingTime(false); 
+    // 是否为配网模式
+    if (Store::instance().wifi().apConfig) {
+        WebServerWrapper::instance().handleClient();
     }
 
-    StateMachine::instance().update(); 
+    // 校正时间flag是否到达
+    if (StateMachine::instance().isCheckingTime()) {
+        startCalibrateTimeAsync();
+        StateMachine::instance().setCheckingTime(false);
+    }
+
+    StateMachine::instance().update();  
     delay(10);
 }
-
-
