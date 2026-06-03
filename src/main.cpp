@@ -9,30 +9,95 @@
 #include "net/ntp.h"
 #include "net/web_server.h"
 
-static void startConfigMode();
-static void startNormalMode();
+// ═══════════════════════════════════════════════════════════════
+//  调试开关：true = Wokwi 仿真模式  |  false = 真实硬件模式
+// ═══════════════════════════════════════════════════════════════
+const bool DEBUG = true;
 
-void setup()
-{
-    // 初始化串口
+// 联网对时函数
+static void startCalibrateTime() {
+    bool ok = WifiManager::instance().connect(30);
+    if (!ok) {
+        StateMachine::instance().gotoPage(Page::RHYTHM);
+        return;
+    }
+
+    ok = Ntp::instance().sync(30);
+    if (!ok) {
+        StateMachine::instance().gotoPage(Page::RHYTHM);
+        return;
+    }
+
+    WifiManager::instance().disconnect();
+}
+
+// 在后台线程中执行对时
+static void startCalibrateTimeAsync() {
+    xTaskCreate(
+        [](void*) { startCalibrateTime(); vTaskDelete(nullptr); },
+        "ntpSync", 4096, nullptr, 1, nullptr
+    );
+}
+
+// 连接仿真器的wIFI
+static void startWokwiMode() {
+    Serial.println("[Wokwi] 连接虚拟 WiFi...");
+    WiFi.begin("Wokwi-GUEST", "");  // 连接wifi
+
+    // 等待连接成功
+    int ticks = 0;
+    while (WiFi.status() != WL_CONNECTED && ticks < 60) {
+        delay(500);
+        ticks++;
+        Serial.print(".");
+    }
+    Serial.println();
+
+    // 判定是否连接成功
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[Wokwi] WiFi 连接失败！");
+        return;
+    }
+
+    // 连接成功，启动 WebServer
+    Serial.print("[Wokwi] 已连接, IP: ");
+    Serial.println(WiFi.localIP());
+
+    // 启动 WebServer
+    WebServerWrapper::instance().start();
+
+    // 进入设置页面
+    StateMachine::instance().gotoPage(Page::SETTING);
+}
+
+// 加载并启动
+void setup() {
     Serial.begin(115200);
-    // 全局存储管理器
+
     Store::instance().load();
-    // HAL 层初始化
     LedMatrix::instance().begin();
     Microphone::instance().begin();
     Buzzer::instance().begin();
     Buttons::instance().begin();
-    // 状态机
     StateMachine::instance().init();
-    // 配网模式
-    if (Store::instance().wifi().apConfig)
-    {
-        startConfigMode();
+
+    if (DEBUG) {
+        startWokwiMode();
         return;
     }
-    // 正常模式
-    startNormalMode();
+
+    // 未配置WiFi，进入配网模式
+    if (Store::instance().wifi().apConfig) {
+        StateMachine::instance().gotoPage(Page::SETTING);
+        WifiManager::instance().startAP();
+        WebServerWrapper::instance().start();
+        return;
+    }
+
+    // 正常启动
+    startCalibrateTime();
+    Ntp::instance().startTicker();
+    StateMachine::instance().gotoPage(Page::TIME);
 }
 
 void loop()
@@ -40,90 +105,17 @@ void loop()
     // 基础物理层：按键轮询心跳，判断单击、双击、长按事件
     Buttons::instance().tick();
 
-    // 定期网络层：动态对时回归
-    if (StateMachine::instance().isCheckingTime())
-    {
-        bool ok = WifiManager::instance().connect(30);
-        if (ok)
-        {
-            Ntp::instance().sync(30);
-            WifiManager::instance().disconnect();
-        }
+    // 是否为配网模式
+    if (Store::instance().wifi().apConfig) {
+        WebServerWrapper::instance().handleClient();
+    }
+
+    // 校正时间flag是否到达
+    if (StateMachine::instance().isCheckingTime()) {
+        startCalibrateTimeAsync();
         StateMachine::instance().setCheckingTime(false);
     }
 
-    // 事件响应层：智能闹钟触发与自动复位
-    if (Ntp::instance().isAlarmPending())
-    {
-        Ntp::instance().clearAlarmPending();
-        Page cur = StateMachine::instance().currentPage();
-        if (cur != Page::SETTING && cur != Page::CLOCK)
-        {
-            StateMachine::instance().gotoPage(Page::TIME);
-            auto &clk = Store::instance().clock();
-            Buzzer::instance().playSong(clk.bellIndex, true);
-            Ntp::instance().setBelling(true);
-            int32_t sec = Ntp::secondsUntilAlarm(clk.hour, clk.minute);
-            Ntp::instance().startClockTicker(sec);
-        }
-    }
-
-    StateMachine::instance().update();
+    StateMachine::instance().update();  
     delay(10);
-}
-
-static void startConfigMode()
-{
-    // UI 状态机切页：SETTING
-    StateMachine::instance().gotoPage(Page::SETTING);
-    // Wi-Fi 工作模式从 WIFI_STA（无线终端，即接收端）切换为 WIFI_AP（软接入点，即发送端）。
-    WifiManager::instance().startAP();
-    // 启动Web服务器：80端口
-    WebServerWrapper::instance().start();
-}
-
-static void startNormalMode()
-{
-    bool wifiOk = WifiManager::instance().connect(30);
-
-    if (!wifiOk)
-    {
-        auto &m = LedMatrix::instance();
-        m.clear();
-        m.setCursor(4, 1);
-        m.print("WIFI X");
-        m.show();
-        delay(1000);
-        StateMachine::instance().gotoPage(Page::RHYTHM);
-        return;
-    }
-    // NTR对时30s
-    bool ntpOk = Ntp::instance().sync(30);
-    WifiManager::instance().disconnect();
-
-    if (!ntpOk) // 对时失败,则进入RHYTHM页面
-    {
-        auto &m = LedMatrix::instance();
-        m.clear();
-        m.setCursor(2, 1);
-        m.print("TIME X");
-        m.show();
-        delay(1000);
-        StateMachine::instance().gotoPage(Page::RHYTHM);
-        return;
-    }
-    // 对时成功
-
-    Ntp::instance().startTicker();
-
-    //
-    auto &clk = Store::instance().clock();
-    if (clk.enabled) // 如果闹钟启用
-    {
-        //{目标时间戳} - {当前时间戳} = {剩余的相对秒数 } (sec)
-        int32_t sec = Ntp::secondsUntilAlarm(clk.hour, clk.minute);
-        Ntp::instance().startClockTicker(sec);
-    }
-
-    StateMachine::instance().gotoPage(Page::TIME);
 }

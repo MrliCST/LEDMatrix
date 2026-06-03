@@ -3,16 +3,19 @@
 #include <WiFi.h>
 #include "core/config.h"
 
+/**
+ * 负责WIFI的连接，热点的开启
+ */
 class WifiManager {
 public:
     static WifiManager& instance();
 
-    // STA 模式
-    bool connect(int timeoutSec);        // 返回是否连接成功
+    // 连接wifi
+    bool connect(int timeoutSec);   
     void disconnect();
     bool isConnected() const { return _connected; }
 
-    // AP 模式（配网）
+    // 热点
     void startAP();
     IPAddress apIP() const;
 
