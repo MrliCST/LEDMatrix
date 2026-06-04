@@ -12,9 +12,9 @@ void Store::load() {
     _wifi.pass     = _prefs.getString("pass", "");
     _wifi.apConfig = _prefs.getBool("apConfig", true);
 
-    _color.r = _prefs.getInt("red",   0);
-    _color.g = _prefs.getInt("green", 250);
-    _color.b = _prefs.getInt("blue",  250);
+    _color.r = _prefs.getInt("red",   255);
+    _color.g = _prefs.getInt("green", 0);
+    _color.b = _prefs.getInt("blue",  0);
 
     _mode.timeMode   = _prefs.getInt("timePage",   TIME_FORMAT_H_M_S);
     _mode.rhythmMode = _prefs.getInt("rhythmPage", RHYTHM_MODE_1);

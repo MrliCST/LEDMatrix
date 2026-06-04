@@ -25,10 +25,9 @@ static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
 
 void TimePage::enter(Page from) {
     Serial.println("TimePage::enter");
-    _prevDisplay = -1; // 确保首次 update() 必定触发 _drawTime
+    _prevDisplay = -1;
     LedMatrix::instance().clear();
     int m = Store::instance().mode().timeMode;
-    // 动态能耗与事件分流设计，根据时间格式选择是否启动动画时钟
     if (m == TIME_FORMAT_H_M || m == TIME_FORMAT_DATE)
         _startAnimTicker();
     else
@@ -40,22 +39,17 @@ void TimePage::exit() { _stopAnimTicker(); }
 void TimePage::update() {
     time_t now;
     time(&now);
-    if (now != _prevDisplay)
-    {
-        // 每秒更新一次时间显示
+    if (now != _prevDisplay) {
         _prevDisplay = now;
-        // 绘制时间
         _drawTime();
     }
 }
 
 void TimePage::_drawTime() {
     auto &m = LedMatrix::instance();
-    m.setBrightness(Store::instance().brightness()); // 设置亮度
+    m.setBrightness(Store::instance().brightness());
     m.clear();
-    // NTP对时加载等待图
-    if (!Ntp::instance().isOk())
-    {
+    if (!Ntp::instance().isOk()) {
         m.drawBitmap(0, 0, IMG_CHECKING_TIME.data,
                      IMG_CHECKING_TIME.width, IMG_CHECKING_TIME.height,
                      Store::instance().color().mainColor);
@@ -63,8 +57,7 @@ void TimePage::_drawTime() {
         return;
     }
 
-    switch (Store::instance().mode().timeMode)
-    {
+    switch (Store::instance().mode().timeMode) {
     case TIME_FORMAT_H_M_S:
         _drawTimeHMS();
         break;
@@ -75,10 +68,9 @@ void TimePage::_drawTime() {
         _drawTimeDate();
         break;
     }
-    m.show(); //
+    m.show();
 }
 
-// ---- 子页面1: HH:MM:SS (x=2起, 30px) ----
 void TimePage::_drawTimeHMS() {
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -106,7 +98,6 @@ void TimePage::_drawTimeHMS() {
     _drawWeekday(3, 2, 7, t->tm_wday, mc, wc);
 }
 
-// ---- 子页面2: 11x8动画 + HH:MM ----
 void TimePage::_drawTimeHM() {
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -130,7 +121,6 @@ void TimePage::_drawTimeHM() {
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
 
-// ---- 子页面3: 11x8动画 + MM-DD ----
 void TimePage::_drawTimeDate() {
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -155,10 +145,8 @@ void TimePage::_drawTimeDate() {
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
 
-// ---- 星期指示线 ----
 void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, uint16_t wc) {
-    // wday: 0=Sun..6=Sat → 映射为周一=首个
-    int today = (wday + 6) % 7; // Mon=0..Sun=6
+    int today = (wday + 6) % 7;
     int x = 0;
     for (int i = 0; i < 7; i++)
     {
@@ -168,7 +156,6 @@ void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, ui
     }
 }
 
-// ---- 3x5 数字绘制 ----
 void TimePage::_drawDigit3x5(uint8_t digit, int x, int y, uint16_t color) {
     if (digit > 9)
         return;
@@ -208,28 +195,24 @@ void TimePage::_drawDash(int x, int y, uint16_t color) {
     }
 }
 
-// ---- 动画 Ticker ----
 void TimePage::_startAnimTicker() {
     if (_tickerAnim)
         return;
     _animFrame = 0;
     _tickerAnim = new Ticker();
-    // 带参数的 Lambda 中断回调
     _tickerAnim->attach_ms(200, +[](TimePage *self)
                                 { self->_animFrame = (self->_animFrame + 1) % TIME_ANIM_FRAME_COUNT; },
-                           this); // 帧率环形缓冲器，每200ms更新一帧
+                           this);
 }
 
-// 销毁与内存释放函数
 void TimePage::_stopAnimTicker() {
-    if (!_tickerAnim) // 事前防御（if (!ptr)）,_tickerAnim 是一个指向底层 Ticker（定时器）对象的指针。
+    if (!_tickerAnim)
         return;
-    _tickerAnim->detach(); // 解除硬件依赖（detach()）,定时器不再发射中断信号
-    delete _tickerAnim;    // 物理销毁（delete）
-    _tickerAnim = nullptr; // 事后擦除（= nullptr）
+    _tickerAnim->detach();
+    delete _tickerAnim;
+    _tickerAnim = nullptr;
 }
 
-// ---- 按钮 ----
 void TimePage::onBtn1Short() {
     int cur = Store::instance().mode().timeMode;
     cur = (cur == TIME_FORMAT_H_M_S) ? TIME_FORMAT_H_M
@@ -270,8 +253,4 @@ void TimePage::onBtn2Short() {
 
 void TimePage::onBtn3Short() {
     StateMachine::instance().gotoPage(Page::RHYTHM);
-}
-
-void TimePage::_onAnimTick(TimePage *self) {
-    self->_animFrame = (self->_animFrame + 1) % TIME_ANIM_FRAME_COUNT;
 }
