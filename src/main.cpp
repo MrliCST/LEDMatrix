@@ -15,15 +15,18 @@
 const bool DEBUG = true;
 
 // 联网对时函数
-static void startCalibrateTime() {
+static void startCalibrateTime()
+{
     bool ok = WifiManager::instance().connect(30);
-    if (!ok) {
+    if (!ok)
+    {
         StateMachine::instance().gotoPage(Page::RHYTHM);
         return;
     }
 
     ok = Ntp::instance().sync(30);
-    if (!ok) {
+    if (!ok)
+    {
         StateMachine::instance().gotoPage(Page::RHYTHM);
         return;
     }
@@ -35,19 +38,21 @@ static void startCalibrateTime() {
                   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
                   t->tm_hour, t->tm_min, t->tm_sec);
 
-    WifiManager::instance().disconnect();
+    // WifiManager::instance().disconnect();
 }
 
 // 在后台线程中执行对时
-static void startCalibrateTimeAsync() {
+static void startCalibrateTimeAsync()
+{
     xTaskCreate(
-        [](void*) { startCalibrateTime(); vTaskDelete(nullptr); },
-        "ntpSync", 4096, nullptr, 1, nullptr
-    );
+        [](void *)
+        { startCalibrateTime(); vTaskDelete(nullptr); },
+        "ntpSync", 4096, nullptr, 1, nullptr);
 }
 
 // 加载并启动
-void setup() {
+void setup()
+{
     Serial.begin(115200);
 
     // 初始化硬件
@@ -59,32 +64,37 @@ void setup() {
     StateMachine::instance().init();
 
     // 正常模式 + 未配置WiFi，进入配网模式
-    if (!DEBUG && Store::instance().wifi().apConfig) {
+    if (!DEBUG && Store::instance().wifi().apConfig)
+    {
         StateMachine::instance().gotoPage(Page::SETTING);
-        WifiManager::instance().startAP();  // 开启热点
+        WifiManager::instance().startAP(); // 开启热点
+        // 启动web服务器
+        WebServerWrapper::instance().start();
         return;
     }
 
     // 调试模式, 自动配置wifi
-    if(DEBUG){
-        WifiManager::instance().connectAndSaveWokwiWIFI();  // 自动连接并保存Wokwi虚拟WiFi
+    if (DEBUG)
+    {
+        WifiManager::instance().connectAndSaveWokwiWIFI(); // 自动连接并保存Wokwi虚拟WiFi
     }
-
     // 启动web服务器
     WebServerWrapper::instance().start();
 
     // 首次授时
     startCalibrateTime();
-    Ntp::instance().startTicker();  // 启动定时对时器
+    Ntp::instance().startTicker(); // 启动定时对时器
     StateMachine::instance().gotoPage(Page::TIME);
 }
 
-void loop() {
+void loop()
+{
     // 轮询监听按钮事件
     Buttons::instance().tick();
 
     // 校正时间flag是否到达
-    if (StateMachine::instance().isCheckingTime()) {
+    if (StateMachine::instance().isCheckingTime())
+    {
         startCalibrateTimeAsync();
         StateMachine::instance().setCheckingTime(false);
     }
