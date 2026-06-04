@@ -28,6 +28,13 @@ static void startCalibrateTime() {
         return;
     }
 
+    // 打印当前时间
+    time_t now = time(nullptr);
+    struct tm *t = localtime(&now);
+    Serial.printf("NTP sync OK, current time: %04d-%02d-%02d %02d:%02d:%02d\n",
+                  t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+                  t->tm_hour, t->tm_min, t->tm_sec);
+
     WifiManager::instance().disconnect();
 }
 
@@ -37,16 +44,6 @@ static void startCalibrateTimeAsync() {
         [](void*) { startCalibrateTime(); vTaskDelete(nullptr); },
         "ntpSync", 4096, nullptr, 1, nullptr
     );
-}
-
-// 建立连接，准备配网
-static void buildConnect(){
-    if (DEBUG){
-        WifiManager::instance().connectAndSaveWokwiWIFI();  // 自动连接并保存Wokwi虚拟WiFi
-    }else{
-        WifiManager::instance().startAP();     // 开启热点，以访问esp提供的web页面
-        WebServerWrapper::instance().start();  // 开启WebServer, 扫描WiFi,手动指定连接，并保存
-    }
 }
 
 // 加载并启动
@@ -61,15 +58,21 @@ void setup() {
     Buttons::instance().begin();
     StateMachine::instance().init();
 
-    // 未配置WiFi，进入配网模式
-    if (Store::instance().wifi().apConfig) {
+    // 正常模式 + 未配置WiFi，进入配网模式
+    if (!DEBUG && Store::instance().wifi().apConfig) {
         StateMachine::instance().gotoPage(Page::SETTING);
-        buildConnect();
+        WifiManager::instance().startAP();     // 开启热点，以访问esp提供的web页面
+        WebServerWrapper::instance().start();  // 开启WebServer, 扫描WiFi,手动指定连接，并保存
         return;
     }
 
+    // 调试模式, 自动配置wifi
+    if(DEBUG){
+        WifiManager::instance().connectAndSaveWokwiWIFI();  // 自动连接并保存Wokwi虚拟WiFi
+    }
+
     // 具有配网信息，正常启动
-    startCalibrateTime();           // 首次对时
+    startCalibrateTime();
     Ntp::instance().startTicker();  // 启动定时对时器
     StateMachine::instance().gotoPage(Page::TIME);
 }

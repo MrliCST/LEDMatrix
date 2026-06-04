@@ -1,5 +1,6 @@
 #include "net/wifi_manager.h"
 #include "core/store.h"
+#include <esp_task_wdt.h>
 
 // 获取实例对象
 WifiManager& WifiManager::instance() { 
@@ -10,7 +11,9 @@ WifiManager& WifiManager::instance() {
 // 连接wifi
 bool WifiManager::connect(int timeoutSec) {
     auto& wifi = Store::instance().wifi();
+    esp_task_wdt_init(30, true); // WiFi.begin() 内部同步阻塞不喂狗，拉长超时
     WiFi.begin(wifi.ssid.c_str(), wifi.pass.c_str());
+    esp_task_wdt_init(5, true);  // 恢复默认
 
     // 最多等待30S
     int ticks = 0;
@@ -54,7 +57,11 @@ IPAddress WifiManager::apIP() const {
 // 连接并保存wokwi仿真器的虚拟wifi
 void WifiManager::connectAndSaveWokwiWIFI(){
     Serial.println("[Wokwi] 连接虚拟 WiFi...");
+    
+    // 仿真环境缺陷，延长喂狗间隔时间
+    esp_task_wdt_init(30, true);
     WiFi.begin("Wokwi-GUEST", "");  // 连接wifi
+    esp_task_wdt_init(5, true);
 
     // 等待连接成功
     int ticks = 0;
@@ -85,6 +92,7 @@ void WifiManager::connectAndSaveWokwiWIFI(){
     wifi.pass = "";
     Store::instance().saveWifi(wifi);
 
-    Serial.println("[Wokwi] 配网成功, 正在重启");
-    ESP.restart();  // 重启设备
+    Serial.println("[Wokwi] WiFi 已配置，继续启动...");
+    WiFi.disconnect(true);  // 断开虚拟 WiFi，后续用正常流程重连
+    delay(100);             // 等待射频关闭 + NVS 落盘
 }
