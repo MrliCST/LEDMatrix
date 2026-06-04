@@ -57,12 +57,12 @@ void setup() {
     Buzzer::instance().begin();
     Buttons::instance().begin();
     StateMachine::instance().init();
+    WebServerWrapper::instance().start(); 
 
     // 正常模式 + 未配置WiFi，进入配网模式
     if (!DEBUG && Store::instance().wifi().apConfig) {
         StateMachine::instance().gotoPage(Page::SETTING);
-        WifiManager::instance().startAP();     // 开启热点，以访问esp提供的web页面
-        WebServerWrapper::instance().start();  // 开启WebServer, 扫描WiFi,手动指定连接，并保存
+        WifiManager::instance().startAP();  // 开启热点
         return;
     }
 
