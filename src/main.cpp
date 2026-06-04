@@ -39,41 +39,21 @@ static void startCalibrateTimeAsync() {
     );
 }
 
-// 连接仿真器的wIFI
-static void startWokwiMode() {
-    Serial.println("[Wokwi] 连接虚拟 WiFi...");
-    WiFi.begin("Wokwi-GUEST", "");  // 连接wifi
-
-    // 等待连接成功
-    int ticks = 0;
-    while (WiFi.status() != WL_CONNECTED && ticks < 60) {
-        delay(500);
-        ticks++;
-        Serial.print(".");
+// 建立连接，准备配网
+static void buildConnect(){
+    if (DEBUG){
+        WifiManager::instance().connectAndSaveWokwiWIFI();  // 自动连接并保存Wokwi虚拟WiFi
+    }else{
+        WifiManager::instance().startAP();     // 开启热点，以访问esp提供的web页面
+        WebServerWrapper::instance().start();  // 开启WebServer, 扫描WiFi,手动指定连接，并保存
     }
-    Serial.println();
-
-    // 判定是否连接成功
-    if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("[Wokwi] WiFi 连接失败！");
-        return;
-    }
-
-    // 连接成功，启动 WebServer
-    Serial.print("[Wokwi] 已连接, IP: ");
-    Serial.println(WiFi.localIP());
-
-    // 启动 WebServer
-    WebServerWrapper::instance().start();
-
-    // 进入设置页面
-    StateMachine::instance().gotoPage(Page::TIME);
 }
 
 // 加载并启动
 void setup() {
     Serial.begin(115200);
 
+    // 初始化硬件
     Store::instance().load();
     LedMatrix::instance().begin();
     Microphone::instance().begin();
@@ -81,34 +61,22 @@ void setup() {
     Buttons::instance().begin();
     StateMachine::instance().init();
 
-    if (DEBUG) {
-        startWokwiMode();
-        return;
-    }
-
     // 未配置WiFi，进入配网模式
     if (Store::instance().wifi().apConfig) {
         StateMachine::instance().gotoPage(Page::SETTING);
-        WifiManager::instance().startAP();
-        WebServerWrapper::instance().start();
+        buildConnect();
         return;
     }
 
-    // 正常启动
-    startCalibrateTime();
-    Ntp::instance().startTicker();
+    // 具有配网信息，正常启动
+    startCalibrateTime();           // 首次对时
+    Ntp::instance().startTicker();  // 启动定时对时器
     StateMachine::instance().gotoPage(Page::TIME);
 }
 
-void loop()
-{
-    // 基础物理层：按键轮询心跳，判断单击、双击、长按事件
+void loop() {
+    // 轮询监听按钮事件
     Buttons::instance().tick();
-
-    // 是否为配网模式
-    if (Store::instance().wifi().apConfig) {
-        WebServerWrapper::instance().handleClient();
-    }
 
     // 校正时间flag是否到达
     if (StateMachine::instance().isCheckingTime()) {
@@ -116,6 +84,9 @@ void loop()
         StateMachine::instance().setCheckingTime(false);
     }
 
-    StateMachine::instance().update();  
+    // 对于setting页面，作用是轮询监听http请求
+    // 对于其他页面，作用是重绘页面
+    StateMachine::instance().update();
+
     delay(10);
 }

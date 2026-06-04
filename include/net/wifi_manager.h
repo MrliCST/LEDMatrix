@@ -19,6 +19,9 @@ public:
     void startAP();
     IPAddress apIP() const;
 
+    // wokwi 虚拟网络
+    void connectAndSaveWokwiWIFI();
+
 private:
     WifiManager() = default;
     bool _connected = false;

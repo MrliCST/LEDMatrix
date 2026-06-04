@@ -50,3 +50,41 @@ void WifiManager::startAP() {
 IPAddress WifiManager::apIP() const { 
     return WiFi.softAPIP(); 
 }
+
+// 连接并保存wokwi仿真器的虚拟wifi
+void WifiManager::connectAndSaveWokwiWIFI(){
+    Serial.println("[Wokwi] 连接虚拟 WiFi...");
+    WiFi.begin("Wokwi-GUEST", "");  // 连接wifi
+
+    // 等待连接成功
+    int ticks = 0;
+    while (WiFi.status() != WL_CONNECTED && ticks < 60) {
+        delay(500);
+        ticks++;
+        Serial.print(".");
+    }
+    Serial.println();
+
+    // 判定是否连接成功
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("[Wokwi] WiFi 连接失败！");
+        return;
+    }
+
+    // 连接成功
+    Serial.print("[Wokwi] 已连接, IP: ");
+    Serial.println(WiFi.localIP());
+
+    // 不再开启web服务器，因为这个 Wokwi-GUEST 是虚拟仿真器唯一的!
+    // 不需要在web进行配置，也没有其他WIFI供选择。
+
+    // 退出配网模式, 保存wifi信息
+    auto wifi = Store::instance().wifi();
+    wifi.apConfig = false;   
+    wifi.ssid = "Wokwi-GUEST";
+    wifi.pass = "";
+    Store::instance().saveWifi(wifi);
+
+    Serial.println("[Wokwi] 配网成功, 正在重启");
+    ESP.restart();  // 重启设备
+}

@@ -1,12 +1,15 @@
 #include "pages/setting_page.h"
-#include "net/web_server.h"
+#include "hal/led_matrix.h"
 
 void SettingPage::enter(Page from) {
-    // 什么都不做，WiFi AP 和 WebServer 已在 setup 里启动
+    auto& m = LedMatrix::instance();
+    m.clear();
+    m.setCursor(0, 1);
+    m.print("setting");
+    m.show();
 }
 
 void SettingPage::update() {
-    WebServerWrapper::instance().handleClient();
 }
 
 void SettingPage::onBtn3Short() {
