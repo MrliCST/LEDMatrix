@@ -23,7 +23,8 @@ static const uint8_t DIGIT[10][3] PROGMEM = {
 static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
 static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
 
-void TimePage::enter(Page from) {
+void TimePage::enter(Page from)
+{
     Serial.println("TimePage::enter");
     _prevDisplay = -1;
     LedMatrix::instance().clear();
@@ -36,7 +37,8 @@ void TimePage::enter(Page from) {
 
 void TimePage::exit() { _stopAnimTicker(); }
 
-void TimePage::update() {
+void TimePage::update()
+{
     time_t now;
     time(&now);
     if (now != _prevDisplay) {
@@ -45,7 +47,8 @@ void TimePage::update() {
     }
 }
 
-void TimePage::_drawTime() {
+void TimePage::_drawTime()
+{
     auto &m = LedMatrix::instance();
     m.setBrightness(Store::instance().brightness());
     m.clear();
@@ -71,7 +74,10 @@ void TimePage::_drawTime() {
     m.show();
 }
 
-void TimePage::_drawTimeHMS() {
+// ---- 子页面1: HH:MM:SS (x=2起, 30px) ----
+void TimePage::_drawTimeHMS()
+{
+    Serial.println("HH:MM:SS::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
     auto &m = LedMatrix::instance();
@@ -98,7 +104,10 @@ void TimePage::_drawTimeHMS() {
     _drawWeekday(3, 2, 7, t->tm_wday, mc, wc);
 }
 
-void TimePage::_drawTimeHM() {
+// ---- 子页面2: 11x8动画 + HH:MM ----
+void TimePage::_drawTimeHM()
+{
+    Serial.println("11x8动画 + HH:MM::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
     auto &m = LedMatrix::instance();
@@ -121,7 +130,10 @@ void TimePage::_drawTimeHM() {
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
 
-void TimePage::_drawTimeDate() {
+// ---- 子页面3: 11x8动画 + MM-DD ----
+void TimePage::_drawTimeDate()
+{
+    Serial.println("11x8动画 + MM-DD::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
     auto &m = LedMatrix::instance();
@@ -182,13 +194,11 @@ void TimePage::_drawColon(int x, int y, uint16_t color) {
     }
 }
 
-void TimePage::_drawDash(int x, int y, uint16_t color) {
+void TimePage::_drawDash(int x, int y, uint16_t color){
     auto &m = LedMatrix::instance();
-    for (int col = 0; col < 3; col++)
-    {
+    for (int col = 0; col < 3; col++){
         uint8_t mask = pgm_read_byte(&DASH_BMP[col]);
-        for (int row = 0; row < 5; row++)
-        {
+        for (int row = 0; row < 5; row++) {
             if (mask & (1 << row))
                 m.drawPixel(x + col, y + row, color);
         }

@@ -17,22 +17,29 @@ void _cycleRhythm(int step) {
 }
 
 void RhythmPage::update() {
-    Microphone::instance().sample();
-    const int* bands = Microphone::instance().bands();
+    // Microphone::instance().sample();
+    // const int* bands = Microphone::instance().bands();
+    //
+    // LedMatrix::instance().clear();
+    //
+    // // 把 bands 映射为柱高度 + 平滑 + 峰值下落（同原 drawRHYTHM 逻辑）
+    // // ...
+    //
+    // switch (Store::instance().mode().rhythmMode) {
+    //     case RHYTHM_MODE_1: _drawRainbowBars();   break;
+    //     case RHYTHM_MODE_2: _drawGradientBars();  break;
+    //     case RHYTHM_MODE_3: _drawVerticalGradient(); break;
+    //     case RHYTHM_MODE_4: _drawPeaksOnly();     break;
+    // }
+    //
+    // LedMatrix::instance().show();
 
-    LedMatrix::instance().clear();
-
-    // 把 bands 映射为柱高度 + 平滑 + 峰值下落（同原 drawRHYTHM 逻辑）
-    // ...
-
-    switch (Store::instance().mode().rhythmMode) {
-        case RHYTHM_MODE_1: _drawRainbowBars();   break;
-        case RHYTHM_MODE_2: _drawGradientBars();  break;
-        case RHYTHM_MODE_3: _drawVerticalGradient(); break;
-        case RHYTHM_MODE_4: _drawPeaksOnly();     break;
-    }
-
-    LedMatrix::instance().show();
+    auto& m = LedMatrix::instance();
+    m.clear();
+    m.setTextColor(m.color(255, 0, 0));
+    m.setCursor(0, 0);
+    m.print("hello");
+    m.show();
 }
 
 void RhythmPage::_drawRainbowBars()   { /* 同原 case RHYTHM_MODEL1 */ }
