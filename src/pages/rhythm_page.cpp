@@ -16,6 +16,10 @@ void _cycleRhythm(int step) {
     Store::instance().saveMode(cfg);
 }
 
+void RhythmPage::enter(Page from) {
+    Serial.println("Rhythm::enter");
+}
+
 void RhythmPage::update() {
     // Microphone::instance().sample();
     // const int* bands = Microphone::instance().bands();

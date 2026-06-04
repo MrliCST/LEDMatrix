@@ -16,6 +16,8 @@ void _cycleAnim(int step) {
 }
 
 void AnimPage::enter(Page from) {
+    Serial.println("Anim::enter");
+
     LedMatrix::instance().clear();
     _resetRaindrops();
     _resetColorWipe();

@@ -4,6 +4,7 @@
 #include "hal/led_matrix.h"
 
 void BrightPage::enter(Page from) {
+    Serial.println("Bright::enter");
     _drawBright();
 }
 
@@ -24,7 +25,7 @@ void BrightPage::onBtn2Short() {
 }
 
 void BrightPage::onBtn3Short() {
-    StateMachine::instance().gotoPage(Page::TIME);
+    StateMachine::instance().gotoPage(Page::SETTING);
 }
 
 void BrightPage::_drawBright() {

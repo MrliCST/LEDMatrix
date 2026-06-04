@@ -61,8 +61,7 @@ void setup() {
     // 正常模式 + 未配置WiFi，进入配网模式
     if (!DEBUG && Store::instance().wifi().apConfig) {
         StateMachine::instance().gotoPage(Page::SETTING);
-        WifiManager::instance().startAP();     // 开启热点，以访问esp提供的web页面
-        WebServerWrapper::instance().start();  // 开启WebServer, 扫描WiFi,手动指定连接，并保存
+        WifiManager::instance().startAP();  // 开启热点
         return;
     }
 
@@ -71,7 +70,10 @@ void setup() {
         WifiManager::instance().connectAndSaveWokwiWIFI();  // 自动连接并保存Wokwi虚拟WiFi
     }
 
-    // 具有配网信息，正常启动
+    // 启动web服务器
+    WebServerWrapper::instance().start();
+
+    // 首次授时
     startCalibrateTime();
     Ntp::instance().startTicker();  // 启动定时对时器
     StateMachine::instance().gotoPage(Page::TIME);

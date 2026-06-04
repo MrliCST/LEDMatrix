@@ -2,19 +2,24 @@
 #include <Fonts/MyFont.h>
 
 // 获取单例
-LedMatrix &LedMatrix::instance()
-{
+LedMatrix &LedMatrix::instance() {
     static LedMatrix m;
     return m;
 }
 
 // 初始化
-void LedMatrix::begin()
-{
+void LedMatrix::begin() {
+    // 计算总宽度（32）和总高度（8）
+    int totalWidth = MATRIX_SIDE * MATRIX_COUNT; // 8 * 4 = 32
+    int totalHeight = MATRIX_SIDE;               // 8
+
+    // 使用单面板构造函数（共 5 个参数）
     _matrix = new Adafruit_NeoMatrix(
-        32, 8, // 宽度为 32 像素，高度为 8 像素
+        totalWidth, totalHeight, LED_DATA_PIN,
         NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_PROGRESSIVE,
-        NEO_GRB + NEO_KHZ800);
+        NEO_GRB + NEO_KHZ800
+    );
+    
     _matrix->begin();
     _matrix->setFont(&MyFont);
     _matrix->setTextWrap(false);

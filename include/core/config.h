@@ -22,7 +22,7 @@
 #define BRIGHTNESS_MIN          5
 #define BRIGHTNESS_MAX        145
 #define BRIGHTNESS_SPACING      5
-#define BRIGHTNESS_DEFAULT     45
+#define BRIGHTNESS_DEFAULT    130
 
 // ---- 麦克风 ----
 #define SAMPLING_FREQ        40000

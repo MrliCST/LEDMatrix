@@ -23,13 +23,11 @@ static const uint8_t DIGIT[10][3] PROGMEM = {
 static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
 static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
 
-void TimePage::enter(Page from)
-{
+void TimePage::enter(Page from) {
     Serial.println("TimePage::enter");
-    _prevDisplay = -1; // 确保首次 update() 必定触发 _drawTime
+    _prevDisplay = -1;
     LedMatrix::instance().clear();
     int m = Store::instance().mode().timeMode;
-    // 动态能耗与事件分流设计，根据时间格式选择是否启动动画时钟
     if (m == TIME_FORMAT_H_M || m == TIME_FORMAT_DATE)
         _startAnimTicker();
     else
@@ -38,27 +36,20 @@ void TimePage::enter(Page from)
 
 void TimePage::exit() { _stopAnimTicker(); }
 
-void TimePage::update()
-{
+void TimePage::update() {
     time_t now;
     time(&now);
-    if (now != _prevDisplay)
-    {
-        // 每秒更新一次时间显示
+    if (now != _prevDisplay) {
         _prevDisplay = now;
-        // 绘制时间
         _drawTime();
     }
 }
 
-void TimePage::_drawTime()
-{
+void TimePage::_drawTime() {
     auto &m = LedMatrix::instance();
-    m.setBrightness(Store::instance().brightness()); // 设置亮度
+    m.setBrightness(Store::instance().brightness());
     m.clear();
-    // NTP对时加载等待图
-    if (!Ntp::instance().isOk())
-    {
+    if (!Ntp::instance().isOk()) {
         m.drawBitmap(0, 0, IMG_CHECKING_TIME.data,
                      IMG_CHECKING_TIME.width, IMG_CHECKING_TIME.height,
                      Store::instance().color().mainColor);
@@ -66,8 +57,7 @@ void TimePage::_drawTime()
         return;
     }
 
-    switch (Store::instance().mode().timeMode)
-    {
+    switch (Store::instance().mode().timeMode) {
     case TIME_FORMAT_H_M_S:
         _drawTimeHMS();
         break;
@@ -78,13 +68,11 @@ void TimePage::_drawTime()
         _drawTimeDate();
         break;
     }
-    m.show(); //
+    m.show();
 }
 
 // ---- 子页面1: HH:MM:SS (x=2起, 30px) ----
-void TimePage::_drawTimeHMS()
-{
-    Serial.println("HH:MM:SS::enter");
+void TimePage::_drawTimeHMS() {
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
     auto &m = LedMatrix::instance();
@@ -112,8 +100,7 @@ void TimePage::_drawTimeHMS()
 }
 
 // ---- 子页面2: 11x8动画 + HH:MM ----
-void TimePage::_drawTimeHM()
-{
+void TimePage::_drawTimeHM() {
     Serial.println("11x8动画 + HH:MM::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -138,8 +125,7 @@ void TimePage::_drawTimeHM()
 }
 
 // ---- 子页面3: 11x8动画 + MM-DD ----
-void TimePage::_drawTimeDate()
-{
+void TimePage::_drawTimeDate() {
     Serial.println("11x8动画 + MM-DD::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -164,11 +150,8 @@ void TimePage::_drawTimeDate()
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
 
-// ---- 星期指示线 ----
-void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, uint16_t wc)
-{
-    // wday: 0=Sun..6=Sat → 映射为周一=首个
-    int today = (wday + 6) % 7; // Mon=0..Sun=6
+void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, uint16_t wc) {
+    int today = (wday + 6) % 7;
     int x = 0;
     for (int i = 0; i < 7; i++)
     {
@@ -178,9 +161,7 @@ void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, ui
     }
 }
 
-// ---- 3x5 数字绘制 ----
-void TimePage::_drawDigit3x5(uint8_t digit, int x, int y, uint16_t color)
-{
+void TimePage::_drawDigit3x5(uint8_t digit, int x, int y, uint16_t color) {
     if (digit > 9)
         return;
     auto &m = LedMatrix::instance();
@@ -195,64 +176,53 @@ void TimePage::_drawDigit3x5(uint8_t digit, int x, int y, uint16_t color)
     }
 }
 
-void TimePage::_drawColon(int x, int y, uint16_t color)
-{
+void TimePage::_drawColon(int x, int y, uint16_t color) {
     auto &m = LedMatrix::instance();
-    for (int col = 0; col < 2; col++)
-    {
+    for (int col = 0; col < 2; col++) {
         uint8_t mask = pgm_read_byte(&COLON_BMP[col]);
-        for (int row = 0; row < 5; row++)
-        {
+        for (int row = 0; row < 5; row++) {
             if (mask & (1 << row))
                 m.drawPixel(x + col, y + row, color);
         }
     }
 }
 
-void TimePage::_drawDash(int x, int y, uint16_t color)
-{
+void TimePage::_drawDash(int x, int y, uint16_t color){
     auto &m = LedMatrix::instance();
-    for (int col = 0; col < 3; col++)
-    {
+    for (int col = 0; col < 3; col++){
         uint8_t mask = pgm_read_byte(&DASH_BMP[col]);
-        for (int row = 0; row < 5; row++)
-        {
+        for (int row = 0; row < 5; row++) {
             if (mask & (1 << row))
                 m.drawPixel(x + col, y + row, color);
         }
     }
 }
 
-// ---- 动画 Ticker ----
-void TimePage::_startAnimTicker()
-{
+void TimePage::_startAnimTicker() {
     if (_tickerAnim)
         return;
     _animFrame = 0;
     _tickerAnim = new Ticker();
-    // 带参数的 Lambda 中断回调
     _tickerAnim->attach_ms(200, +[](TimePage *self)
                                 { self->_animFrame = (self->_animFrame + 1) % TIME_ANIM_FRAME_COUNT; },
-                           this); // 帧率环形缓冲器，每200ms更新一帧
+                           this);
 }
 
-// 销毁与内存释放函数
-void TimePage::_stopAnimTicker()
-{
-    if (!_tickerAnim) // 事前防御（if (!ptr)）,_tickerAnim 是一个指向底层 Ticker（定时器）对象的指针。
+void TimePage::_stopAnimTicker() {
+    if (!_tickerAnim)
         return;
-    _tickerAnim->detach(); // 解除硬件依赖（detach()）,定时器不再发射中断信号
-    delete _tickerAnim;    // 物理销毁（delete）
-    _tickerAnim = nullptr; // 事后擦除（= nullptr）
+    _tickerAnim->detach();
+    delete _tickerAnim;
+    _tickerAnim = nullptr;
 }
 
-// ---- 按钮 ----
-void TimePage::onBtn1Short()
-{
+void TimePage::onBtn1Short() {
     int cur = Store::instance().mode().timeMode;
-    cur = (cur == TIME_FORMAT_H_M_S) ? TIME_FORMAT_H_M
-          : (cur == TIME_FORMAT_H_M) ? TIME_FORMAT_DATE
-                                     : TIME_FORMAT_H_M_S;
+    switch (cur) {
+    case TIME_FORMAT_H_M_S: cur = TIME_FORMAT_H_M;   break;
+    case TIME_FORMAT_H_M:   cur = TIME_FORMAT_DATE;  break;
+    default:                cur = TIME_FORMAT_H_M_S; break;
+    }
 
     ModeConfig cfg = Store::instance().mode();
     cfg.timeMode = cur;
@@ -267,12 +237,13 @@ void TimePage::onBtn1Short()
         _stopAnimTicker();
 }
 
-void TimePage::onBtn2Short()
-{
+void TimePage::onBtn2Short() {
     int cur = Store::instance().mode().timeMode;
-    cur = (cur == TIME_FORMAT_H_M_S)  ? TIME_FORMAT_DATE
-          : (cur == TIME_FORMAT_DATE) ? TIME_FORMAT_H_M
-                                      : TIME_FORMAT_H_M_S;
+    switch (cur) {
+    case TIME_FORMAT_H_M_S: cur = TIME_FORMAT_DATE;  break;
+    case TIME_FORMAT_DATE:  cur = TIME_FORMAT_H_M;   break;
+    default:                cur = TIME_FORMAT_H_M_S; break;
+    }
 
     ModeConfig cfg = Store::instance().mode();
     cfg.timeMode = cur;
@@ -287,12 +258,6 @@ void TimePage::onBtn2Short()
         _stopAnimTicker();
 }
 
-void TimePage::onBtn3Short()
-{
+void TimePage::onBtn3Short() {
     StateMachine::instance().gotoPage(Page::RHYTHM);
-}
-
-void TimePage::_onAnimTick(TimePage *self)
-{
-    self->_animFrame = (self->_animFrame + 1) % TIME_ANIM_FRAME_COUNT;
 }

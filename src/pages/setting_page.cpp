@@ -1,7 +1,11 @@
 #include "pages/setting_page.h"
+#include "core/state_machine.h"
 #include "hal/led_matrix.h"
+#include <net/web_server.h>
 
 void SettingPage::enter(Page from) {
+    Serial.println("Setting::enter");
+
     auto& m = LedMatrix::instance();
     m.clear();
     m.setCursor(0, 1);
@@ -10,9 +14,9 @@ void SettingPage::enter(Page from) {
 }
 
 void SettingPage::update() {
+    WebServerWrapper::instance().handleClient();  // 处理 web 请求
 }
 
 void SettingPage::onBtn3Short() {
-    // 停止显示 IP 的任务 → 清屏 → 根据是否有 ssid 决定连 WiFi 还是跳转
-    // 同原 btn3click case SETTING 的逻辑
+    StateMachine::instance().gotoPage(Page::TIME);
 }
