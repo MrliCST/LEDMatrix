@@ -23,6 +23,7 @@
  */
 class RhythmPage : public PageBase {
 public:
+    void enter(Page from) override;       // 初始化
     void update() override;               // 采样 → FFT → 清屏 → 画柱 → show
     void onBtn1Short() override;          // 模式 +1
     void onBtn2Short() override;          // 模式 -1

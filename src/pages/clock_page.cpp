@@ -24,6 +24,8 @@ static const uint8_t DIGIT[10][3] PROGMEM = {
 static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
 
 void ClockPage::enter(Page from) {
+    Serial.println("Clock::enter");
+
     auto& c = Store::instance().clock();
     _tmpHour   = c.hour;
     _tmpMinute = c.minute;

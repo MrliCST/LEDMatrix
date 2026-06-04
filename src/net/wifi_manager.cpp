@@ -72,7 +72,7 @@ void WifiManager::connectAndSaveWokwiWIFI(){
     }
 
     // 连接成功
-    Serial.print("[Wokwi] 已连接, IP: ");
+    Serial.print("[Wokwi] connected WIFI, IP: ");
     Serial.println(WiFi.localIP());
 
     // 不再开启web服务器，因为这个 Wokwi-GUEST 是虚拟仿真器唯一的!

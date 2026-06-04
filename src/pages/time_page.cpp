@@ -23,8 +23,7 @@ static const uint8_t DIGIT[10][3] PROGMEM = {
 static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
 static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
 
-void TimePage::enter(Page from)
-{
+void TimePage::enter(Page from) {
     Serial.println("TimePage::enter");
     _prevDisplay = -1;
     LedMatrix::instance().clear();
@@ -37,8 +36,7 @@ void TimePage::enter(Page from)
 
 void TimePage::exit() { _stopAnimTicker(); }
 
-void TimePage::update()
-{
+void TimePage::update() {
     time_t now;
     time(&now);
     if (now != _prevDisplay) {
@@ -47,8 +45,7 @@ void TimePage::update()
     }
 }
 
-void TimePage::_drawTime()
-{
+void TimePage::_drawTime() {
     auto &m = LedMatrix::instance();
     m.setBrightness(Store::instance().brightness());
     m.clear();
@@ -75,9 +72,7 @@ void TimePage::_drawTime()
 }
 
 // ---- 子页面1: HH:MM:SS (x=2起, 30px) ----
-void TimePage::_drawTimeHMS()
-{
-    Serial.println("HH:MM:SS::enter");
+void TimePage::_drawTimeHMS() {
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
     auto &m = LedMatrix::instance();
@@ -105,8 +100,7 @@ void TimePage::_drawTimeHMS()
 }
 
 // ---- 子页面2: 11x8动画 + HH:MM ----
-void TimePage::_drawTimeHM()
-{
+void TimePage::_drawTimeHM() {
     Serial.println("11x8动画 + HH:MM::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -131,8 +125,7 @@ void TimePage::_drawTimeHM()
 }
 
 // ---- 子页面3: 11x8动画 + MM-DD ----
-void TimePage::_drawTimeDate()
-{
+void TimePage::_drawTimeDate() {
     Serial.println("11x8动画 + MM-DD::enter");
     time_t now = time(nullptr);
     struct tm *t = localtime(&now);
@@ -225,9 +218,11 @@ void TimePage::_stopAnimTicker() {
 
 void TimePage::onBtn1Short() {
     int cur = Store::instance().mode().timeMode;
-    cur = (cur == TIME_FORMAT_H_M_S) ? TIME_FORMAT_H_M
-          : (cur == TIME_FORMAT_H_M) ? TIME_FORMAT_DATE
-                                     : TIME_FORMAT_H_M_S;
+    switch (cur) {
+    case TIME_FORMAT_H_M_S: cur = TIME_FORMAT_H_M;   break;
+    case TIME_FORMAT_H_M:   cur = TIME_FORMAT_DATE;  break;
+    default:                cur = TIME_FORMAT_H_M_S; break;
+    }
 
     ModeConfig cfg = Store::instance().mode();
     cfg.timeMode = cur;
@@ -244,9 +239,11 @@ void TimePage::onBtn1Short() {
 
 void TimePage::onBtn2Short() {
     int cur = Store::instance().mode().timeMode;
-    cur = (cur == TIME_FORMAT_H_M_S)  ? TIME_FORMAT_DATE
-          : (cur == TIME_FORMAT_DATE) ? TIME_FORMAT_H_M
-                                      : TIME_FORMAT_H_M_S;
+    switch (cur) {
+    case TIME_FORMAT_H_M_S: cur = TIME_FORMAT_DATE;  break;
+    case TIME_FORMAT_DATE:  cur = TIME_FORMAT_H_M;   break;
+    default:                cur = TIME_FORMAT_H_M_S; break;
+    }
 
     ModeConfig cfg = Store::instance().mode();
     cfg.timeMode = cur;
