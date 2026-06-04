@@ -12,9 +12,8 @@ LedMatrix &LedMatrix::instance()
 void LedMatrix::begin()
 {
     _matrix = new Adafruit_NeoMatrix(
-        MATRIX_SIDE, MATRIX_SIDE, MATRIX_COUNT, 1, LED_DATA_PIN,
-        NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG +
-            NEO_TILE_TOP + NEO_TILE_LEFT + NEO_TILE_ROWS + NEO_TILE_ZIGZAG,
+        32, 8, // 宽度为 32 像素，高度为 8 像素
+        NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_PROGRESSIVE,
         NEO_GRB + NEO_KHZ800);
     _matrix->begin();
     _matrix->setFont(&MyFont);
