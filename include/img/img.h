@@ -7,7 +7,7 @@
 // ---- 逐个引入位图数据 ----
 #include "elems/animHack.h"        // const uint16_t animHack[]  — 数字雨色板 (6色)
 #include "elems/bell.h"            // const uint8_t  bell[]      — 闹钟图标 (6×8 单色)
-#include "elems/xmark.h"           // const uint8_t  xmark[]     — X 图标 (5×7 单色)
+#include "elems/xmark.h"           // const uint8_t  xmark[]     — X 图标 (5×5 单色)
 #include "elems/checkingTime.h"    // const uint8_t  checkingTime[] — 对时中提示 (32×8 单色)
 #include "elems/timeAnim0.h"       // const uint16_t timeAnim0[] — 时间翻页帧0
 #include "elems/timeAnim1.h"       // const uint16_t timeAnim1[] — 时间翻页帧1
@@ -21,6 +21,7 @@
 
 // ---- 位图元信息 ----
 
+// 注意：此数据为列优先格式，务必使用 drawColumnMajorBitmap 渲染
 struct MonoBitmap {
     const uint8_t* data;
     int width;
@@ -39,7 +40,7 @@ static const MonoBitmap IMG_BELL = {
 };
 
 static const MonoBitmap IMG_XMARK = {
-    xmark, 5, 7
+    xmark, 5, 5
 };
 
 static const MonoBitmap IMG_CHECKING_TIME = {

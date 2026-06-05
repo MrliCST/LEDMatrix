@@ -193,31 +193,10 @@ void ClockPage::_drawClock()
         m.clear(); // 物理清空画布
 
         uint16_t mc = Store::instance().color().mainColor;
-        uint16_t redColor = m.color(255, 0, 0); // 纯红色
-        // 1. 手工渲染【选项B：复古小铃铛】 (X起点: 9, Y起点: 0) -> 占据 X: 9~14, Y: 0~7
-        for (int col = 0; col < 6; col++)
-        {
-            uint8_t mask = pgm_read_byte(&bell[col]);
-            for (int row = 0; row < 8; row++)
-            {
-                if (mask & (1 << row))
-                {
-                    m.drawPixel(9 + col, 0 + row, mc);
-                }
-            }
-        }
-        // 2. 精准手工渲染红色 XMARK (X起点: 19, Y起点: 1) -> 占据 X: 19~23, Y: 1~5 (高度完美对齐)
-        for (int col = 0; col < 5; col++)
-        {
-            uint8_t mask = pgm_read_byte(&xmark[col]);
-            for (int row = 0; row < 5; row++)
-            {
-                if (mask & (1 << row))
-                {
-                    m.drawPixel(19 + col, 1 + row, redColor);
-                }
-            }
-        }
+        uint16_t redColor = m.color(255, 0, 0);
+
+        m.drawColumnMajorBitmap(9, 0, bell, 6, 8, mc);
+        m.drawColumnMajorBitmap(19, 1, xmark, 5, 5, redColor);
         m.show();
         return;
     }
@@ -236,15 +215,7 @@ void ClockPage::_drawClock()
     x += 4;
     LedMatrix::instance().drawDigit3x5(_tmpMinute % 10, x, y, mc);
 
-    for (int col = 0; col < IMG_BELL.width; col++)
-    {
-        uint8_t mask = pgm_read_byte(&IMG_BELL.data[col]);
-        for (int row = 0; row < IMG_BELL.height; row++)
-        {
-            if (mask & (1 << row))
-                m.drawPixel(23 + col, 1 + row, mc);
-        }
-    }
+    m.drawColumnMajorBitmap(23, 1, IMG_BELL.data, IMG_BELL.width, IMG_BELL.height, mc);
 
     // 移动光标到当前选择项
     switch (_selection)
@@ -272,10 +243,12 @@ void ClockPage::_drawClock()
 void ClockPage::_saveAndApply()
 {
     ClockConfig cfg = Store::instance().clock();
+    bool changed = (cfg.hour != _tmpHour || cfg.minute != _tmpMinute || cfg.bellIndex != _tmpBell);
+
     cfg.hour = _tmpHour;
     cfg.minute = _tmpMinute;
     cfg.bellIndex = _tmpBell;
-    cfg.enabled = !cfg.enabled;
+    cfg.enabled = changed ? true : !cfg.enabled;
     Store::instance().saveClock(cfg);
 
     // 停止旧的倒计时
@@ -297,5 +270,16 @@ void ClockPage::_saveAndApply()
     }
 
     _drawClock();
+
+    if (cfg.enabled)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            delay(100);
+            LedMatrix::instance().clear();
+            delay(100);
+            _drawClock();
+        }
+    }
 }
 

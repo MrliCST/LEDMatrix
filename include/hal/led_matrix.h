@@ -20,6 +20,8 @@ public:
     void fillRect(int x, int y, int w, int h, uint16_t color);
     // 画单色位图
     void drawBitmap(int x, int y, const uint8_t *bmp, int w, int h, uint16_t color);
+    // 画列优先单色位图（与 DIGIT/bell/xmark 字模格式一致）
+    void drawColumnMajorBitmap(int x, int y, const uint8_t *bmp, int w, int h, uint16_t color);
     // 画彩色位图
     void drawRGBBitmap(int x, int y, const uint16_t *bmp, int w, int h);
     // 画3x5数字/符号

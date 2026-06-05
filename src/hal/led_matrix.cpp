@@ -62,6 +62,19 @@ void LedMatrix::setFont(const GFXfont *f) { _matrix->setFont(f); }
 void LedMatrix::setTextWrap(bool w) { _matrix->setTextWrap(w); }
 uint16_t LedMatrix::color(uint8_t r, uint8_t g, uint8_t b) { return _matrix->Color(r, g, b); }
 
+void LedMatrix::drawColumnMajorBitmap(int x, int y, const uint8_t *bmp, int w, int h, uint16_t color)
+{
+    for (int col = 0; col < w; col++)
+    {
+        uint8_t mask = pgm_read_byte(&bmp[col]);
+        for (int row = 0; row < h; row++)
+        {
+            if (mask & (1 << row))
+                _matrix->drawPixel(x + col, y + row, color);
+        }
+    }
+}
+
 void LedMatrix::drawDigit3x5(uint8_t digit, int x, int y, uint16_t color)
 {
     if (digit > 9)
