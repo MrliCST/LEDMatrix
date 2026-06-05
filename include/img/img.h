@@ -7,6 +7,7 @@
 // ---- 逐个引入位图数据 ----
 #include "elems/animHack.h"        // const uint16_t animHack[]  — 数字雨色板 (6色)
 #include "elems/bell.h"            // const uint8_t  bell[]      — 闹钟图标 (6×8 单色)
+#include "elems/xmark.h"           // const uint8_t  xmark[]     — X 图标 (5×7 单色)
 #include "elems/checkingTime.h"    // const uint8_t  checkingTime[] — 对时中提示 (32×8 单色)
 #include "elems/timeAnim0.h"       // const uint16_t timeAnim0[] — 时间翻页帧0
 #include "elems/timeAnim1.h"       // const uint16_t timeAnim1[] — 时间翻页帧1
@@ -35,6 +36,10 @@ struct RgbBitmap {
 // 图标
 static const MonoBitmap IMG_BELL = {
     bell, 6, 8
+};
+
+static const MonoBitmap IMG_XMARK = {
+    xmark, 5, 7
 };
 
 static const MonoBitmap IMG_CHECKING_TIME = {

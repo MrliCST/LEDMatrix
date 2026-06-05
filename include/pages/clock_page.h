@@ -23,8 +23,6 @@ private:
     bool    _belling = false;             // 正在响铃中
 
     void _drawClock();
-    void _drawDigit3x5(uint8_t digit, int x, int y, uint16_t color);
-    void _drawColon(int x, int y, uint16_t color);
     void _saveAndApply();
     void _cancelBelling();
     static void _onAlarm(ClockPage* self);

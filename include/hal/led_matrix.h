@@ -22,6 +22,10 @@ public:
     void drawBitmap(int x, int y, const uint8_t *bmp, int w, int h, uint16_t color);
     // 画彩色位图
     void drawRGBBitmap(int x, int y, const uint16_t *bmp, int w, int h);
+    // 画3x5数字/符号
+    void drawDigit3x5(uint8_t digit, int x, int y, uint16_t color);
+    void drawColon(int x, int y, uint16_t color);
+    void drawDash(int x, int y, uint16_t color);
     // 文字打印流
     void setCursor(int x, int y);      // 设置光标位置
     void setTextColor(uint16_t color); // 设置文字颜色

@@ -9,19 +9,20 @@ static TaskHandle_t _buzzerTask = nullptr;
 static void _playTask(void* param) {
     int songIdx = (int)param;
     if (songIdx < 0 || songIdx >= SONG_COUNT) {
+        _buzzerTask = nullptr;
         vTaskDelete(nullptr);
-        return;
     }
 
     const SongInfo& song = SONG_LIST[songIdx];
     for (int i = 0; i < song.length; i++) {
-        int note = song.notes[i];
-        int duration = song.durations[i];
+        int note = pgm_read_word(&song.notes[i]);
+        int duration = pgm_read_word(&song.durations[i]);
         // ledcWriteTone(channel, note);   // 播放音符
         // vTaskDelay(duration * 10 / portTICK_PERIOD_MS);
         // ledcWriteTone(channel, 0);       // 停止
     }
 
+    _buzzerTask = nullptr;
     Buzzer::instance().stop();
     vTaskDelete(nullptr);
 }

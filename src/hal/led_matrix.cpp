@@ -1,6 +1,22 @@
 #include "hal/led_matrix.h"
 #include <Fonts/MyFont.h>
 
+static const uint8_t DIGIT[10][3] PROGMEM = {
+    {0x0E, 0x11, 0x0E}, // 0
+    {0x12, 0x1F, 0x10}, // 1
+    {0x19, 0x15, 0x13}, // 2
+    {0x11, 0x15, 0x1F}, // 3
+    {0x07, 0x04, 0x1F}, // 4
+    {0x17, 0x15, 0x1D}, // 5
+    {0x0E, 0x15, 0x1D}, // 6
+    {0x01, 0x01, 0x1F}, // 7
+    {0x1F, 0x15, 0x1F}, // 8
+    {0x17, 0x15, 0x1F}, // 9
+};
+
+static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
+static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
+
 // 获取单例
 LedMatrix &LedMatrix::instance() {
     static LedMatrix m;
@@ -45,3 +61,44 @@ void LedMatrix::print(const String &s) { _matrix->print(s); }
 void LedMatrix::setFont(const GFXfont *f) { _matrix->setFont(f); }
 void LedMatrix::setTextWrap(bool w) { _matrix->setTextWrap(w); }
 uint16_t LedMatrix::color(uint8_t r, uint8_t g, uint8_t b) { return _matrix->Color(r, g, b); }
+
+void LedMatrix::drawDigit3x5(uint8_t digit, int x, int y, uint16_t color)
+{
+    if (digit > 9)
+        return;
+    for (int col = 0; col < 3; col++)
+    {
+        uint8_t mask = pgm_read_byte(&DIGIT[digit][col]);
+        for (int row = 0; row < 5; row++)
+        {
+            if (mask & (1 << row))
+                _matrix->drawPixel(x + col, y + row, color);
+        }
+    }
+}
+
+void LedMatrix::drawColon(int x, int y, uint16_t color)
+{
+    for (int col = 0; col < 2; col++)
+    {
+        uint8_t mask = pgm_read_byte(&COLON_BMP[col]);
+        for (int row = 0; row < 5; row++)
+        {
+            if (mask & (1 << row))
+                _matrix->drawPixel(x + col, y + row, color);
+        }
+    }
+}
+
+void LedMatrix::drawDash(int x, int y, uint16_t color)
+{
+    for (int col = 0; col < 3; col++)
+    {
+        uint8_t mask = pgm_read_byte(&DASH_BMP[col]);
+        for (int row = 0; row < 5; row++)
+        {
+            if (mask & (1 << row))
+                _matrix->drawPixel(x + col, y + row, color);
+        }
+    }
+}

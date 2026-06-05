@@ -6,23 +6,6 @@
 #include "img/img.h"
 #include <time.h>
 
-// 3x5 数字位图: 3字节/数字, bit0=顶行
-static const uint8_t DIGIT[10][3] PROGMEM = {
-    {0x0E, 0x11, 0x0E}, // 0
-    {0x12, 0x1F, 0x10}, // 1
-    {0x19, 0x15, 0x13}, // 2
-    {0x11, 0x15, 0x1F}, // 3
-    {0x07, 0x04, 0x1F}, // 4
-    {0x17, 0x15, 0x1D}, // 5
-    {0x0E, 0x15, 0x1D}, // 6
-    {0x01, 0x01, 0x1F}, // 7
-    {0x1F, 0x15, 0x1F}, // 8
-    {0x17, 0x15, 0x1F}, // 9
-};
-
-static const uint8_t COLON_BMP[2] PROGMEM = {0x0A, 0x0A};
-static const uint8_t DASH_BMP[3] PROGMEM = {0x04, 0x04, 0x04};
-
 void TimePage::enter(Page from)
 {
     Serial.println("TimePage::enter");
@@ -87,21 +70,21 @@ void TimePage::_drawTimeHMS()
     uint16_t wc = Store::instance().color().weekColor;
 
     int x = 2, y = 1;
-    _drawDigit3x5(t->tm_hour / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_hour / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_hour % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_hour % 10, x, y, mc);
     x += 4;
-    _drawColon(x, y, mc);
+    LedMatrix::instance().drawColon(x, y, mc);
     x += 3;
-    _drawDigit3x5(t->tm_min / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_min / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_min % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_min % 10, x, y, mc);
     x += 4;
-    _drawColon(x, y, mc);
+    LedMatrix::instance().drawColon(x, y, mc);
     x += 3;
-    _drawDigit3x5(t->tm_sec / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_sec / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_sec % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_sec % 10, x, y, mc);
 
     _drawWeekday(3, 2, 7, t->tm_wday, mc, wc);
 }
@@ -119,15 +102,15 @@ void TimePage::_drawTimeHM()
     m.drawRGBBitmap(0, 0, TIME_ANIM_FRAMES[_animFrame], 11, 8);
 
     int x = 14, y = 1;
-    _drawDigit3x5(t->tm_hour / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_hour / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_hour % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_hour % 10, x, y, mc);
     x += 4;
-    _drawColon(x, y, mc);
+    LedMatrix::instance().drawColon(x, y, mc);
     x += 3;
-    _drawDigit3x5(t->tm_min / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_min / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_min % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_min % 10, x, y, mc);
 
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
@@ -146,15 +129,15 @@ void TimePage::_drawTimeDate()
 
     int month = t->tm_mon + 1;
     int x = 12, y = 1;
-    _drawDigit3x5(month / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(month / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(month % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(month % 10, x, y, mc);
     x += 4;
-    _drawDash(x, y, mc);
+    LedMatrix::instance().drawDash(x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_mday / 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_mday / 10, x, y, mc);
     x += 4;
-    _drawDigit3x5(t->tm_mday % 10, x, y, mc);
+    LedMatrix::instance().drawDigit3x5(t->tm_mday % 10, x, y, mc);
 
     _drawWeekday(2, 3, 7, t->tm_wday, mc, wc);
 }
@@ -168,50 +151,6 @@ void TimePage::_drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, ui
         uint16_t c = (i == today) ? mc : wc;
         LedMatrix::instance().fillRect(x, y, barW, 1, c);
         x += barW + gapW;
-    }
-}
-
-void TimePage::_drawDigit3x5(uint8_t digit, int x, int y, uint16_t color)
-{
-    if (digit > 9)
-        return;
-    auto &m = LedMatrix::instance();
-    for (int col = 0; col < 3; col++)
-    {
-        uint8_t mask = pgm_read_byte(&DIGIT[digit][col]);
-        for (int row = 0; row < 5; row++)
-        {
-            if (mask & (1 << row))
-                m.drawPixel(x + col, y + row, color);
-        }
-    }
-}
-
-void TimePage::_drawColon(int x, int y, uint16_t color)
-{
-    auto &m = LedMatrix::instance();
-    for (int col = 0; col < 2; col++)
-    {
-        uint8_t mask = pgm_read_byte(&COLON_BMP[col]);
-        for (int row = 0; row < 5; row++)
-        {
-            if (mask & (1 << row))
-                m.drawPixel(x + col, y + row, color);
-        }
-    }
-}
-
-void TimePage::_drawDash(int x, int y, uint16_t color)
-{
-    auto &m = LedMatrix::instance();
-    for (int col = 0; col < 3; col++)
-    {
-        uint8_t mask = pgm_read_byte(&DASH_BMP[col]);
-        for (int row = 0; row < 5; row++)
-        {
-            if (mask & (1 << row))
-                m.drawPixel(x + col, y + row, color);
-        }
     }
 }
 

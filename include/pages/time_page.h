@@ -22,9 +22,6 @@ private:
     void _drawTimeHM();
     void _drawTimeDate();
     void _drawWeekday(int barW, int gapW, int y, int wday, uint16_t mc, uint16_t wc);
-    void _drawDigit3x5(uint8_t digit, int x, int y, uint16_t color);
-    void _drawColon(int x, int y, uint16_t color);
-    void _drawDash(int x, int y, uint16_t color);
     void _startAnimTicker();
     void _stopAnimTicker();
 
